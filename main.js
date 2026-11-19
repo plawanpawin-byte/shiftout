@@ -168,7 +168,7 @@ async function runJob(opts) {
     c.on('error', (e) => { jobs.delete(jid); reject(e); });
     c.on('close', (code, sig) => {
       jobs.delete(jid);
-      if (code === 0) resolve({ ok: true, id: o.id, name: path.basename(o.p), size: fs.existsSync(o.p) ? fs.statSync(o.p).size : 0 });
+      if (code === 0) resolve({ ok: true, log: err.slice(-1500), id: o.id, name: path.basename(o.p), size: fs.existsSync(o.p) ? fs.statSync(o.p).size : 0 });
       else { if (o.temp) try { fs.unlinkSync(o.p); } catch (_) {} reject(new Error(sig ? 'Cancelled' : err.split('\n').filter(Boolean).slice(-4).join('\n'))); }
     });
   });
@@ -209,6 +209,8 @@ ipcMain.handle('file:folder', async () => { const r = await dialog.showOpenDialo
 
 app.whenReady().then(() => {
   registerMediaProtocol();
+  // Hard network kill-switch: this app never talks to the internet.
+  session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*', 'ftp://*/*'] }, (_d, cb) => cb({ cancel: true }));
   session.defaultSession.setPermissionRequestHandler((_wc, perm, cb) => cb(false));
   createWindow();
 });
