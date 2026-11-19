@@ -24,11 +24,16 @@
       "preload.js",
       "renderer/**",
       "build/icon.png",
-      "package.json"
+      "package.json",
+      "!node_modules/ffprobe-static/bin/darwin/**",
+      "!node_modules/ffprobe-static/bin/linux/**",
+      "!node_modules/ffprobe-static/bin/win32/ia32/**",
+      "!node_modules/ffmpeg-static/*.md",
+      "!node_modules/ffmpeg-static/example.js"
     ],
     "asarUnpack": [
-      "node_modules/ffmpeg-static/**",
-      "node_modules/ffprobe-static/**"
+      "node_modules/ffmpeg-static/ffmpeg.exe",
+      "node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe"
     ],
     "win": {
       "target": [
