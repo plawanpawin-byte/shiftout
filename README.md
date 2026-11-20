@@ -1,6 +1,6 @@
 <p align="center"><img src="screenshots/banner.png" alt="Shiftout" width="100%"></p>
 
-<p align="center"><b>Convert and compress media</b><br>Version 1.0.1 for Windows · Free · Offline · No account</p>
+<p align="center"><b>Convert and compress media</b><br>Version 1.0.2 for Windows · Free · Offline · No account</p>
 
 <p align="center"><a href="https://github.com/plawanpawin-byte/shiftout/releases/latest"><b>Download Shiftout</b></a> · <a href="https://github.com/plawanpawin-byte/Lookout">All Lookout apps</a></p>
 
@@ -11,6 +11,12 @@ Shiftout converts video and audio between formats, shrinks large files and makes
 **Made for:** For when a file will not play on a device, is too big to send, or you only need the audio from a video.
 
 ![Shiftout](screenshots/01-queue.png)
+
+**On this page:** [Screenshots](#see-it-in-action) · [Interface](#the-interface) · [Features](#everything-it-can-do) · [How to use it](#how-to-use-it) · [Shortcuts](#keyboard-shortcuts) · [Formats](#files-and-formats) · [Privacy](#private-by-design) · [Install](#install) · [Questions](#questions)
+
+## What is new in 1.0.2
+
+A refreshed interface: every toolbar button now has a clear line icon, the app's mark sits at the top left, controls share one height and spacing, panels line up in tidy grids, and the toolbar keeps every button reachable on smaller windows by switching less important buttons to icons.
 
 ## See it in action
 
@@ -49,6 +55,12 @@ The MP3 produced from a video, drawn as a spectrogram.
 ![Output: GIF](screenshots/06-output-gif-frame.png)
 
 A frame from the animated GIF made from the clip.
+
+## The interface
+
+- **Top bar:** add files, choose the output folder, convert all, stop, remove and clear.
+- **Queue (centre):** every file with its details, size, result and status.
+- **Right panel:** target format and its settings, and the optional trim.
 
 ## Everything it can do
 
@@ -119,5 +131,15 @@ No. If a name is already taken, a number is added to the new file.
 ## About Lookout
 
 Shiftout belongs to the **[Lookout](https://github.com/plawanpawin-byte/Lookout)** family: ten small, private Windows apps for documents and media, all with the same calm grey look and the same promise that your files stay yours. Install and update them together with the [Lookout launcher](https://github.com/plawanpawin-byte/lookout-launcher).
+
+- **[Pageout](https://github.com/plawanpawin-byte/pageout)**: read, annotate and sign pdfs
+- **[Chartout](https://github.com/plawanpawin-byte/chartout)**: flowcharts and diagrams
+- **[Branchout](https://github.com/plawanpawin-byte/branchout)**: mind maps and outlines
+- **[Planout](https://github.com/plawanpawin-byte/planout)**: plans and gantt timelines
+- **[Frameout](https://github.com/plawanpawin-byte/frameout)**: screen design and prototypes
+- **[Cutout](https://github.com/plawanpawin-byte/cutout)**: video editing on a timeline
+- **[Castout](https://github.com/plawanpawin-byte/castout)**: record your screen
+- **[Mendout](https://github.com/plawanpawin-byte/mendout)**: repair damaged media
+- **[Tuneout](https://github.com/plawanpawin-byte/tuneout)**: record and edit audio
 
 Released under the MIT License.
