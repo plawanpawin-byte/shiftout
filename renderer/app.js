@@ -21,6 +21,9 @@ const FORMATS = {
   mkv:  { label: 'MKV video (H.264)', ext: 'mkv', kind: 'video' },
   mov:  { label: 'MOV video (H.264)', ext: 'mov', kind: 'video' },
   webm: { label: 'WebM video (VP9)', ext: 'webm', kind: 'video' },
+  dvd:  { label: 'DVD video (MPEG-2, .mpg)', ext: 'mpg', kind: 'video', dvd: true },
+  cvid: { label: 'Compress video (to target size)', ext: 'mp4', kind: 'video', compress: true },
+  caud: { label: 'Compress audio (small MP3)', ext: 'mp3', kind: 'audio', compress: true },
   gif:  { label: 'Animated GIF', ext: 'gif', kind: 'gif' },
   mp3:  { label: 'MP3 audio', ext: 'mp3', kind: 'audio' },
   m4a:  { label: 'AAC audio (M4A)', ext: 'm4a', kind: 'audio' },
@@ -28,7 +31,8 @@ const FORMATS = {
   flac: { label: 'FLAC audio', ext: 'flac', kind: 'audio' },
   opus: { label: 'Opus audio', ext: 'opus', kind: 'audio' },
 };
-const opt = { fmt: 'mp4', quality: '24', height: '0', fps: '0', abr: '160', noAudio: false, start: '', end: '', targetMb: '' };
+const opt = { fmt: 'mp4', quality: '24', height: '0', fps: '0', abr: '160', noAudio: false, start: '', end: '', targetMb: '', hw: 'cpu', dvdStd: 'pal' };
+const HW = { nvenc: ['h264_nvenc', 'NVIDIA (NVENC)'], qsv: ['h264_qsv', 'Intel (Quick Sync)'], amf: ['h264_amf', 'AMD (AMF)'] };
 let queue = []; // {id, fid, name, size, dur, w, h, hasVideo, status, pct, outName, err}
 let outFolder = null; // {id, name}
 let running = false, cancelRequested = false;
@@ -81,15 +85,20 @@ function renderRight() {
   const f = FORMATS[opt.fmt], isV = f.kind === 'video', isG = f.kind === 'gif', isA = f.kind === 'audio';
   right.append(h('h3', { text: 'Convert to' }), sel('Format', 'fmt', Object.entries(FORMATS).map(([k, v]) => [k, v.label]), () => { fixDefaults(); renderRight(); }));
   if (isV) {
+    if (f.dvd) right.append(sel('DVD standard', 'dvdStd', [['pal', 'PAL (25 fps, 720x576)'], ['ntsc', 'NTSC (29.97 fps, 720x480)']]), h('div', { class: 'muted', style: 'font-size:12px', text: 'Creates a DVD-compliant .mpg. Use any disc authoring tool to burn it; Shiftout does not write discs.' }));
+    else {
+    if (f.compress) right.append(h('div', { class: 'muted', style: 'font-size:12px', text: 'Set a target size below. The video bitrate is calculated so the result lands just under it.' }));
     right.append(sel('Quality', 'quality', [['20', 'High'], ['24', 'Balanced'], ['28', 'Small file'], ['32', 'Smallest']]),
       sel('Resolution', 'height', [['0', 'Keep original'], ['1080', '1080p'], ['720', '720p'], ['480', '480p'], ['360', '360p']]),
       sel('Frame rate', 'fps', [['0', 'Keep original'], ['60', '60 fps'], ['30', '30 fps'], ['24', '24 fps'], ['15', '15 fps']]));
-    right.append(h('label', { class: 'row' }, h('input', { type: 'checkbox', checked: opt.noAudio, onchange: (e) => { opt.noAudio = e.target.checked; renderRight(); } }), 'Remove audio'));
-    if (!opt.noAudio) right.append(sel('Audio quality', 'abr', [['96', '96 kbps'], ['128', '128 kbps'], ['160', '160 kbps'], ['192', '192 kbps'], ['256', '256 kbps']]));
-    right.append(h('label', { class: 'field' }, 'Target size in MB (optional)', h('input', { type: 'number', min: 1, value: opt.targetMb, placeholder: 'Use quality setting', oninput: (e) => { opt.targetMb = e.target.value; } })));
+    if (opt.fmt !== 'webm') right.append(sel('Encoder', 'hw', [['cpu', 'CPU (x264)'], ...Object.entries(HW).map(([k, v]) => [k, v[1] + ' - GPU'])]), h('div', { class: 'muted', style: 'font-size:12px', text: 'GPU encoding is faster. If your graphics card cannot do it, Shiftout retries on the CPU automatically.' }));
+    }
+    if (!f.dvd) right.append(h('label', { class: 'row' }, h('input', { type: 'checkbox', checked: opt.noAudio, onchange: (e) => { opt.noAudio = e.target.checked; renderRight(); } }), 'Remove audio'));
+    if (!opt.noAudio && !FORMATS[opt.fmt].dvd) right.append(sel('Audio quality', 'abr', [['96', '96 kbps'], ['128', '128 kbps'], ['160', '160 kbps'], ['192', '192 kbps'], ['256', '256 kbps']]));
+    if (!f.dvd) right.append(h('label', { class: 'field' }, f.compress ? 'Target size in MB' : 'Target size in MB (optional)', h('input', { type: 'number', min: 1, value: opt.targetMb, placeholder: 'Use quality setting', oninput: (e) => { opt.targetMb = e.target.value; } })));
   }
   if (isG) right.append(sel('Width', 'height', [['480', '480 px'], ['360', '360 px'], ['720', '720 px'], ['240', '240 px']]), sel('Frame rate', 'fps', [['12', '12 fps'], ['10', '10 fps'], ['15', '15 fps'], ['20', '20 fps']]));
-  if (isA && opt.fmt !== 'wav' && opt.fmt !== 'flac') right.append(sel('Bitrate', 'abr', [['128', '128 kbps'], ['160', '160 kbps'], ['192', '192 kbps'], ['256', '256 kbps'], ['320', '320 kbps']]));
+  if (isA && !f.compress && opt.fmt !== 'wav' && opt.fmt !== 'flac') right.append(sel('Bitrate', 'abr', [['128', '128 kbps'], ['160', '160 kbps'], ['192', '192 kbps'], ['256', '256 kbps'], ['320', '320 kbps']]));
   right.append(h('h3', { text: 'Trim (optional)' }), h('div', { class: 'row' },
     h('label', { class: 'field' }, 'Start', h('input', { type: 'text', value: opt.start, placeholder: '0:00', style: 'width:100%', oninput: (e) => { opt.start = e.target.value; } })),
     h('label', { class: 'field' }, 'End', h('input', { type: 'text', value: opt.end, placeholder: 'end', style: 'width:100%', oninput: (e) => { opt.end = e.target.value; } }))));
@@ -129,7 +138,8 @@ function buildArgs(q) {
   const dur = total || q.dur || 1;
   if (f.kind === 'audio') {
     a.push('-vn');
-    if (opt.fmt === 'mp3') a.push('-c:a', 'libmp3lame', '-b:a', opt.abr + 'k');
+    if (opt.fmt === 'caud') a.push('-ac', '1', '-c:a', 'libmp3lame', '-b:a', '64k');
+    else if (opt.fmt === 'mp3') a.push('-c:a', 'libmp3lame', '-b:a', opt.abr + 'k');
     else if (opt.fmt === 'm4a') a.push('-c:a', 'aac', '-b:a', opt.abr + 'k');
     else if (opt.fmt === 'opus') a.push('-c:a', 'libopus', '-b:a', opt.abr + 'k');
     else if (opt.fmt === 'wav') a.push('-c:a', 'pcm_s16le');
@@ -139,6 +149,8 @@ function buildArgs(q) {
     a.push('-vf', `fps=${opt.fps},scale=${opt.height}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, '-loop', '0');
   } else {
     if (!q.hasVideo) throw new Error('This file has no video. Pick an audio format instead');
+    if (f.dvd) { a.push('-target', opt.dvdStd === 'ntsc' ? 'ntsc-dvd' : 'pal-dvd'); a.push('{out}'); return { args: a, dur }; }
+    if (f.compress && !(parseFloat(opt.targetMb) > 0)) throw new Error('Enter a target size in MB');
     const vf = []; if (opt.height !== '0') vf.push(`scale=-2:${opt.height}`);
     if (vf.length) a.push('-vf', vf.join(','));
     if (opt.fps !== '0') a.push('-r', opt.fps);
@@ -147,9 +159,13 @@ function buildArgs(q) {
     let vrate = null;
     if (tgt > 0) { vrate = Math.floor((tgt * 8192 * 0.96) / dur - abr); if (vrate < 60) throw new Error('Target size is too small for this length'); }
     if (opt.fmt === 'webm') { a.push('-c:v', 'libvpx-vp9', '-row-mt', '1', '-cpu-used', '4'); if (vrate) a.push('-b:v', vrate + 'k'); else a.push('-crf', String(+opt.quality + 6), '-b:v', '0'); }
-    else { a.push('-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p'); if (vrate) a.push('-b:v', vrate + 'k', '-maxrate', Math.round(vrate * 1.4) + 'k', '-bufsize', vrate * 2 + 'k'); else a.push('-crf', opt.quality); }
+    else {
+      const hwk = opt.hw !== 'cpu' && !opt.forceCpu ? HW[opt.hw] : null;
+      if (hwk) { a.push('-c:v', hwk[0]); if (opt.hw === 'nvenc') a.push('-preset', 'p4'); a.push('-pix_fmt', 'yuv420p'); if (vrate) a.push('-b:v', vrate + 'k', '-maxrate', Math.round(vrate * 1.4) + 'k', '-bufsize', vrate * 2 + 'k'); else if (opt.hw === 'nvenc') a.push('-rc', 'vbr', '-cq', opt.quality, '-b:v', '0'); else if (opt.hw === 'qsv') a.push('-global_quality', opt.quality); else a.push('-rc', 'cqp', '-qp_i', opt.quality, '-qp_p', opt.quality); }
+      else { a.push('-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p'); if (vrate) a.push('-b:v', vrate + 'k', '-maxrate', Math.round(vrate * 1.4) + 'k', '-bufsize', vrate * 2 + 'k'); else a.push('-crf', opt.quality); }
+    }
     if (opt.noAudio) a.push('-an'); else if (opt.fmt === 'webm') a.push('-c:a', 'libopus', '-b:a', abr + 'k'); else a.push('-c:a', 'aac', '-b:a', abr + 'k');
-    if (opt.fmt === 'mp4' || opt.fmt === 'mov') a.push('-movflags', '+faststart');
+    if (opt.fmt === 'mp4' || opt.fmt === 'mov' || opt.fmt === 'cvid') a.push('-movflags', '+faststart');
   }
   a.push('{out}');
   return { args: a, dur };
@@ -164,10 +180,16 @@ async function runAll() {
     if (cancelRequested) { q.status = 'cancelled'; continue; }
     q.status = 'running'; q.pct = 0; q.err = ''; render();
     try {
-      const { args, dur } = buildArgs(q);
+      let { args, dur } = buildArgs(q);
       window.host.onProgress((p) => { q.pct = Math.min(99, Math.round((p.t / dur) * 100)); const bar = stage.querySelector('tr.sel .progress div, .progress div'); updateBars(); });
       const base = q.name.replace(/\.[^.]+$/, '');
-      const r = await window.host.run({ args, inputs: [q.fid], out: { dir: outFolder.id, name: base + '.' + FORMATS[opt.fmt].ext }, duration: dur });
+      const job = () => window.host.run({ args, inputs: [q.fid], out: { dir: outFolder.id, name: base + '.' + FORMATS[opt.fmt].ext }, duration: dur });
+      let r;
+      try { r = await job(); } catch (e1) {
+        if (opt.hw === 'cpu' || FORMATS[opt.fmt].kind !== 'video' || cancelRequested || /Cancelled/.test(String(e1))) throw e1;
+        opt.forceCpu = true; try { ({ args, dur } = buildArgs(q)); } finally { opt.forceCpu = false; }
+        toast('GPU encoder unavailable, using the CPU'); r = await job();
+      }
       q.status = 'done'; q.outId = r.id; q.outName = r.name; q.outSize = r.size; q.pct = 100;
     } catch (e) { q.status = /Cancelled/.test(String(e)) || cancelRequested ? 'cancelled' : 'failed'; q.err = String(e.message || e).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
     render();

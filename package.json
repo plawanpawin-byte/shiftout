@@ -1,7 +1,7 @@
 {
   "name": "shiftout",
   "productName": "Shiftout",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Convert, compress and batch-process video and audio files.",
   "main": "main.js",
   "author": "Lookout",
