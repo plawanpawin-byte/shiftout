@@ -131,8 +131,9 @@ function clearDone() { if (running) return; queue = queue.filter((q) => q.status
 function buildArgs(q) {
   const f = FORMATS[opt.fmt]; const a = []; const start = parseTime(opt.start), end = parseTime(opt.end);
   if (isNaN(start) || isNaN(end)) throw new Error('Trim times must look like 1:30 or 90');
-  const total = Math.max(0, (end || q.dur) - start);
   if (end && end <= start) throw new Error('End must be after start');
+  if (q.dur > 0 && start >= q.dur) throw new Error('Start is past the end of this file (' + fmtTime(q.dur) + ')');
+  const total = Math.max(0, (q.dur > 0 ? Math.min(end || q.dur, q.dur) : (end || q.dur)) - start);
   if (start) a.push('-ss', String(start));
   a.push('-i', '{in0}');
   if (end || start) { if (end) a.push('-t', String(+(end - start).toFixed(3))); }
