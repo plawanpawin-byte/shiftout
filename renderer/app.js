@@ -93,7 +93,7 @@ function renderRight() {
       sel('Frame rate', 'fps', [['0', 'Keep original'], ['60', '60 fps'], ['30', '30 fps'], ['24', '24 fps'], ['15', '15 fps']]));
     if (opt.fmt !== 'webm') right.append(sel('Encoder', 'hw', [['cpu', 'CPU (x264)'], ...Object.entries(HW).map(([k, v]) => [k, v[1] + ' - GPU'])]), h('div', { class: 'muted', style: 'font-size:12px', text: 'GPU encoding is faster. If your graphics card cannot do it, Shiftout retries on the CPU automatically.' }));
     }
-    if (!f.dvd) right.append(h('label', { class: 'row' }, h('input', { type: 'checkbox', checked: opt.noAudio, onchange: (e) => { opt.noAudio = e.target.checked; renderRight(); } }), 'Remove audio'));
+    if (!f.dvd) right.append(h('label', { class: 'row', style: 'margin:10px 0 4px' }, h('input', { type: 'checkbox', checked: opt.noAudio, onchange: (e) => { opt.noAudio = e.target.checked; renderRight(); } }), 'Remove audio'));
     if (!opt.noAudio && !FORMATS[opt.fmt].dvd) right.append(sel('Audio quality', 'abr', [['96', '96 kbps'], ['128', '128 kbps'], ['160', '160 kbps'], ['192', '192 kbps'], ['256', '256 kbps']]));
     if (!f.dvd) right.append(h('label', { class: 'field' }, f.compress ? 'Target size in MB' : 'Target size in MB (optional)', h('input', { type: 'number', min: 1, value: opt.targetMb, placeholder: 'Use quality setting', oninput: (e) => { opt.targetMb = e.target.value; } })));
   }
