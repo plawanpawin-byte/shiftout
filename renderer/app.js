@@ -199,4 +199,9 @@ async function runAll() {
 }
 function updateBars() { const rows = [...stage.querySelectorAll('tbody tr')]; queue.forEach((q, i) => { if (q.status === 'running') { const b = rows[i] && rows[i].querySelector('.progress div'); if (b) b.style.width = q.pct + '%'; } }); }
 
+document.addEventListener('keydown', (e) => {
+  if (!e.ctrlKey) return; const k = e.key.toLowerCase();
+  if (k === 'o') { e.preventDefault(); if (!running) addFiles(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (!running) runAll(); }
+});
 render();
