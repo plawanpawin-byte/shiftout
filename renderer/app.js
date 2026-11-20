@@ -110,8 +110,9 @@ const origSel = sel;
 
 // ---------- queue ----------
 const MEDIA_FILTERS = [['Media files', ['mp4', 'mkv', 'mov', 'avi', 'webm', 'wmv', 'flv', 'm4v', 'mpg', 'mpeg', 'ts', '3gp', 'mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg', 'opus', 'wma', 'gif']], ['All files', ['*']]];
-async function addFiles() {
-  const files = await window.host.openFiles({ multi: true, read: false, filters: MEDIA_FILTERS });
+async function addFiles(dropped) {
+  if (!Array.isArray(dropped)) dropped = null;
+  const files = dropped || await window.host.openFiles({ multi: true, read: false, filters: MEDIA_FILTERS });
   for (const f of files) {
     const q = { id: Math.random().toString(36).slice(2, 8), fid: f.id, name: f.name, size: f.size, dur: 0, w: 0, h: 0, hasVideo: false, status: 'waiting', pct: 0 };
     const p = await window.host.probe(f.id);
@@ -204,4 +205,5 @@ document.addEventListener('keydown', (e) => {
   if (k === 'o') { e.preventDefault(); if (!running) addFiles(); }
   else if (e.key === 'Enter') { e.preventDefault(); if (!running) runAll(); }
 });
+window.host.onDrop((items) => { if (!running && items.length) addFiles(items); });
 render();

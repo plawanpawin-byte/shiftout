@@ -57,6 +57,14 @@ ipcMain.handle('file:open', async (_e, opts = {}) => {
   return out;
 });
 
+ipcMain.handle('file:drop', async (_e, paths) => {
+  const out = [];
+  for (const p of (Array.isArray(paths) ? paths : []).slice(0, 200)) {
+    try { const st = fs.statSync(p); if (st.isFile()) out.push({ id: grant(p), name: path.basename(p), size: st.size }); } catch {}
+  }
+  return out;
+});
+
 ipcMain.handle('file:save', async (_e, opts = {}) => {
   const r = await dialog.showSaveDialog(win, {
     defaultPath: opts.name, filters: filters(opts.filters),

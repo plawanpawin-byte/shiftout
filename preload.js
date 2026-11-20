@@ -1,5 +1,13 @@
 'use strict';
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
+
+let dropCb = null;
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const paths = [...(e.dataTransfer?.files || [])].map((f) => { try { return webUtils.getPathForFile(f); } catch { return ''; } }).filter(Boolean);
+  if (paths.length && dropCb) ipcRenderer.invoke('file:drop', paths).then((items) => dropCb && dropCb(items));
+});
 
 contextBridge.exposeInMainWorld('host', {
   openFiles: (opts) => ipcRenderer.invoke('file:open', opts),
@@ -17,5 +25,6 @@ contextBridge.exposeInMainWorld('host', {
   chooseFolder: () => ipcRenderer.invoke('file:folder'),
   probe: (id) => ipcRenderer.invoke('media:probe', id),
   cancel: () => ipcRenderer.invoke('media:cancel'),
+  onDrop: (fn) => { dropCb = fn; },
   onProgress: (fn) => { ipcRenderer.removeAllListeners('media:progress'); ipcRenderer.on('media:progress', (_e, v) => fn(v)); },
 });
