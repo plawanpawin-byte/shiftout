@@ -207,3 +207,5 @@ document.addEventListener('keydown', (e) => {
 });
 window.host.onDrop((items) => { if (!running && items.length) addFiles(items); });
 render();
+
+window.addEventListener('beforeunload', (e) => { if (running) { e.preventDefault(); e.returnValue = ''; } });
